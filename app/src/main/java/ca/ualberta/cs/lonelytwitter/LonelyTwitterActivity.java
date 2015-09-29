@@ -1,5 +1,17 @@
 package ca.ualberta.cs.lonelytwitter;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Date;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
@@ -11,21 +23,12 @@ import android.widget.ListView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-
 public class LonelyTwitterActivity extends Activity {
 
 	private static final String FILENAME = "file.sav";
 	private EditText bodyText;
 	private ListView oldTweetsList;
+
 
 	private ArrayList<Tweet> tweets = new ArrayList<Tweet>();
 	private ArrayAdapter<Tweet> adapter;
@@ -69,6 +72,9 @@ public class LonelyTwitterActivity extends Activity {
 		// TODO Auto-generated method stub
 		super.onStart();
 		loadFromFile();
+		if (tweets == null) {
+			throw new RuntimeException();
+		}
 		adapter = new ArrayAdapter<Tweet>(this, R.layout.list_item, tweets);
 		oldTweetsList.setAdapter(adapter);
 	}
@@ -78,13 +84,14 @@ public class LonelyTwitterActivity extends Activity {
 			FileInputStream fis = openFileInput(FILENAME);
 			BufferedReader in = new BufferedReader(new InputStreamReader(fis));
 			Gson gson = new Gson();
-			Type listType = new TypeToken<ArrayList<NormalTweet>>() {
-			}.getType();
+			// Following line based on https://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/com/google/gson/Gson.html retrieved 2015-09-21
+			Type listType = new TypeToken<ArrayList<NormalTweet>>() {}.getType();
 			tweets = gson.fromJson(in, listType);
+
 		} catch (FileNotFoundException e) {
 			tweets = new ArrayList<Tweet>();
 		} catch (IOException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 	}
 	
