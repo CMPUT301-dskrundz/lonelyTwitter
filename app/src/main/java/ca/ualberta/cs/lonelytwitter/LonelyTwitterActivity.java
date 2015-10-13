@@ -13,8 +13,11 @@ import java.util.Date;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,11 +28,16 @@ import com.google.gson.reflect.TypeToken;
 
 public class LonelyTwitterActivity extends Activity {
 
+	private LonelyTwitterActivity activity = this;
+
 	private static final String FILENAME = "file.sav";
 	private EditText bodyText;
 	private ListView oldTweetsList;
 	private ArrayList<Tweet> tweets = new ArrayList<Tweet>();
 	private ArrayAdapter<Tweet> adapter;
+	private Button saveButton;
+
+
 
 	/** Called when the activity is first created. */
 	@Override
@@ -39,11 +47,10 @@ public class LonelyTwitterActivity extends Activity {
 		setContentView(R.layout.main);
 
 		bodyText = (EditText) findViewById(R.id.body);
-		Button saveButton = (Button) findViewById(R.id.save);
+		saveButton = (Button) findViewById(R.id.save);
 		oldTweetsList = (ListView) findViewById(R.id.oldTweetsList);
 
 		saveButton.setOnClickListener(new View.OnClickListener() {
-
 			public void onClick(View v) {
 				setResult(RESULT_OK);
 				String text = bodyText.getText().toString();
@@ -52,9 +59,32 @@ public class LonelyTwitterActivity extends Activity {
 				saveInFile();
 			}
 		});
+
+		oldTweetsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view, int poisition, long id) {
+				Intent intent = new Intent(activity, EditTweetActivity.class);
+				// http://developer.android.com/training/basics/firstapp/starting-activity.html
+				intent.putExtra("TWEET-TEXT", tweets.get(poisition).getText());
+				intent.putExtra("Edit#", poisition);
+				startActivityForResult(intent, 1);
+			}
+		});
 	}
 
-	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == 1) {
+			if (resultCode == RESULT_OK) {
+				String newValue = data.getStringExtra("finalValue");
+				int num = data.getIntExtra("edit#", 0);
+				tweets.get(num).setText(newValue);
+				Log.w("", tweets.get(num).getText());
+				saveInFile();
+			}
+		}
+	}
+
+		@Override
 	protected void onStart() {
 		// TODO Auto-generated method stub
 		super.onStart();
@@ -92,5 +122,21 @@ public class LonelyTwitterActivity extends Activity {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public EditText getBodyText() {
+		return this.bodyText;
+	}
+
+	public Button getSaveButton() {
+		return this.saveButton;
+	}
+
+	public ListView getOldTweetsList() {
+		return this.oldTweetsList;
+	}
+
+	public ArrayList<Tweet> getTweets() {
+		return this.tweets;
 	}
 }
